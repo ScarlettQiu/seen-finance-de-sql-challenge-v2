@@ -2,11 +2,14 @@
 
 #### **Q2: Write a query that lists unusual transactions. It’s up to you to define what unusual means. You might want to use some statistical functions.**
 
-- As the definition of unusual transactions is left undefined, I defined unusual transaction as those transaction, which are `atleast three standard deviations` away from the `mean`. Now, this was a bit long calculation, as S`QLite does not provide any function to get the standard deviation`.
-- So I had to calculate the mean (average) and the standard deviation in two different cte's, and then combine together in the third cte, to get all the transacitons that are three standard deviations away from the mean. I calculate a new column called `flagged_trans` and it is set to `1` if the transaction is atleast `3 standard deviations away from the mean` (I had to google the formula for standard deviation). I am only showing transactions where flagged_trans = 1. Feel free to remove that condition and check the entire output.
-- `I only consider positive transactions` while finding un-usual transactions, meaning that `I only look at Purchases` by the customer and `not payments/returns` by the customer to `avoid any returns/payments being flagged as un-usual transactions`.
-- I also include `z-score calculations` to `measure how many standard deviations` a transaction is `away from the mean`, for more detailed analysis.
-- There may be some transactions for some customers wheree the standard deviation amount `may either be NULL or 0`. This could mean two things. One, either there is `only one transaction for the cusotmer` (in the standard deviation amount calculation, `SQRT((SUM((CAST(acct.transaction_amount as float) - apcc.avg_trans_amt) * (CAST(acct.transaction_amount as float) - apcc.avg_trans_amt))) / ((COUNT(*) - 1)))`, the division will lead to 0 because the customer has only single positive transaction), `leading to NULL standard deviation amount`. Second, `all the transactions for the customer is identical`,` hence no variation` in transaction amount, leading to 0 when calculating standard deviation amount.
+- Since the definition of unusual transactions was not specified, I identified them using the 1.5 IQR rule with a 90-day rolling window.
+- To detect outliers, I calculated the 25th percentile (Q1) and 75th percentile (Q3), then determined the bounds using:
+   - Lower Bound: Q1 - 1.5 * (Q3 - Q1)
+   - Upper Bound: Q3 + 1.5 * (Q3 - Q1)
+- Any transaction exceeding the upper bound within the 90-day rolling window is flagged as unusual.
+- This query specifically considers money outflows.
+- The analysis is conducted at the account level, not the customer level.
+
 
     ```SQL
     -- FINAL QUERY FOR Q2
