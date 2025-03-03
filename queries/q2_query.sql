@@ -1,3 +1,4 @@
+--90-day rolling window
 WITH tran_90_day AS(
 SELECT consumer_id
       , account_id
